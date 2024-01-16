@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect
 from werkzeug.serving import make_server
+import pyautogui
 
 class VoiceTypingAppServer:
     def __init__(self):
@@ -11,7 +12,8 @@ class VoiceTypingAppServer:
             message = request.form.get('message')
             device_name = request.form.get('device_name')
             print(f"Received message from {device_name}: {message}")
-            return redirect("http://example.com", code=302)
+            pyautogui.write(message)  # type: ignore # Type out the message
+            return redirect("https://github.com/a3ro-dev/voiceTypingApp", code=302)
 
     def run(self):
         self.server = make_server('localhost', 3000, self.app)
