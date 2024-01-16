@@ -1,22 +1,22 @@
 from flask import Flask, request, redirect
+from werkzeug.serving import make_server
 
 class VoiceTypingAppServer:
     def __init__(self):
         self.app = Flask(__name__)
+        self.server = None
 
         @self.app.route('/send_message', methods=['POST'])
         def send_message():
             message = request.form.get('message')
-            # Here you would send the message to your Flutter app
-            # This could be done in a variety of ways, such as through a WebSocket connection,
-            # by updating a database that your Flutter app is listening to, etc.
-            
-            # Redirect to a specific URL
+            device_name = request.form.get('device_name')
+            print(f"Received message from {device_name}: {message}")
             return redirect("http://example.com", code=302)
 
     def run(self):
-        self.app.run(port=3000)
+        self.server = make_server('localhost', 3000, self.app)
+        self.server.serve_forever()
 
-if __name__ == '__main__':
-    server = VoiceTypingAppServer()
-    server.run()
+    def stop(self):
+        if self.server is not None:
+            self.server.shutdown()
