@@ -1,16 +1,12 @@
-from flask import Flask, request, redirect
+import threading
+from server import VoiceTypingAppServer
+import tkinter as tk
 
-app = Flask(__name__)
+def start_server():
+    server = VoiceTypingAppServer()
+    threading.Thread(target=server.run).start()
 
-@app.route('/send_message', methods=['POST'])
-def send_message():
-    message = request.form.get('message')
-    # Here you would send the message to your Flutter app
-    # This could be done in a variety of ways, such as through a WebSocket connection,
-    # by updating a database that your Flutter app is listening to, etc.
-    
-    # Redirect to a specific URL
-    return redirect("http://example.com", code=302)
-
-if __name__ == '__main__':
-    app.run(port=3000)
+root = tk.Tk()
+start_button = tk.Button(root, text="Start Server", command=start_server)
+start_button.pack()
+root.mainloop()
