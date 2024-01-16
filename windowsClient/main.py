@@ -29,10 +29,13 @@ def toggle_server(icon, item):
 
 device_name_label = None  # Initialize the device_name_label variable
 
+connection_status_canvas = None  # Initialize the connection_status_canvas variable
+
 def update_device_name(device_name):
     device_name_label.config(text=f"Device name: {device_name}")
 
 def update_connection_status(is_connected):
+    global connection_status_canvas  # Add global keyword to access the global variable
     color = "green" if is_connected else "red"
     connection_status_canvas.config(bg=color)
 

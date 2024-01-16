@@ -16,7 +16,7 @@ class VoiceTypingAppServer:
             return redirect("https://github.com/a3ro-dev/voiceTypingApp", code=302)
 
     def run(self):
-        self.server = make_server('localhost', 3000, self.app)
+        self.server = make_server('0.0.0.0', 3000, self.app)
         self.server.serve_forever()
 
     def stop(self):

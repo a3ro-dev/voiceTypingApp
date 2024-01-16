@@ -14,6 +14,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   IO.Socket? socket;
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController _ipController =
+      TextEditingController(text: '192.168.31.209');
   bool isConnected = false;
   Timer? timer;
 
@@ -24,7 +26,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> connectSocket() async {
-    socket = IO.io('http://localhost:3000', <String, dynamic>{
+    socket = IO
+        .io('http://${_ipController.text}:3000/send_message', <String, dynamic>{
       'transports': ['websocket'],
     });
     socket?.onConnect((_) async {
@@ -40,7 +43,8 @@ class _HomePageState extends State<HomePage> {
         isConnected = false;
       });
       // Start a timer that tries to reconnect every 5 seconds
-      timer = Timer.periodic(const Duration(seconds: 5), (Timer t) => connectSocket());
+      timer = Timer.periodic(
+          const Duration(seconds: 5), (Timer t) => connectSocket());
     });
   }
 
@@ -62,6 +66,13 @@ class _HomePageState extends State<HomePage> {
           ),
           CupertinoActionSheetAction(
             child: Text(isConnected ? 'Connected' : 'Disconnected'),
+            onPressed: () {},
+          ),
+          CupertinoActionSheetAction(
+            child: CupertinoTextField(
+              controller: _ipController,
+              placeholder: 'Enter server IP',
+            ),
             onPressed: () {},
           ),
         ],
