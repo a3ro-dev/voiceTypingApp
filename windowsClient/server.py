@@ -1,24 +1,24 @@
-from flask import Flask, request, redirect
-from werkzeug.serving import make_server
+from flask import Flask, redirect, request
+from flask_socketio import SocketIO
 import pyautogui
 
 class VoiceTypingAppServer:
     def __init__(self):
         self.app = Flask(__name__)
-        self.server = None
+        self.socketio = SocketIO(self.app)
 
         @self.app.route('/send_message', methods=['POST'])
         def send_message():
             message = request.form.get('message')
             device_name = request.form.get('device_name')
             print(f"Received message from {device_name}: {message}")
-            pyautogui.write(message)  # type: ignore # Type out the message
+            if message is not None:
+                pyautogui.write(str(message)) # Type out the message
             return redirect("https://github.com/a3ro-dev/voiceTypingApp", code=302)
 
-    def run(self):
-        self.server = make_server('0.0.0.0', 3000, self.app)
-        self.server.serve_forever()
+        @self.socketio.on('message')
+        def handle_message(data):
+            print('received message: ' + data)
 
-    def stop(self):
-        if self.server is not None:
-            self.server.shutdown()
+    def run(self):
+        self.socketio.run(self.app, host='0.0.0.0', port=3000, use_reloader=False, log_output=True)

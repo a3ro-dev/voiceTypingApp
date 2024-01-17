@@ -1,120 +1,113 @@
-import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:voicetypingapp/theme/theme_provider.dart';
+import 'package:flutter/services.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: HomePage(),
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: ThemeMode.system, // Default mode
+    );
+  }
+}
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
-
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  IO.Socket? socket;
   final TextEditingController _controller = TextEditingController();
-  final TextEditingController _ipController =
-      TextEditingController(text: '192.168.31.209');
-  bool isConnected = false;
-  Timer? timer;
+  String filePath = '';
+  bool isDarkMode = false;
 
   @override
   void initState() {
     super.initState();
-    connectSocket();
+    void _onTextChanged() {
+      // Add your logic here
+    }
+
+    @override
+    void initState() {
+      super.initState();
+      _controller.addListener(_onTextChanged);
+    }
+    getFilePath();
   }
 
-  Future<void> connectSocket() async {
-    socket = IO
-        .io('http://${_ipController.text}:3000/send_message', <String, dynamic>{
-      'transports': ['websocket'],
-    });
-    socket?.onConnect((_) async {
-      print('Connected');
-      setState(() {
-        isConnected = true;
-      });
-      timer?.cancel(); // Cancel the timer when connected
-    });
-    socket?.onDisconnect((_) {
-      print('Disconnected');
-      setState(() {
-        isConnected = false;
-      });
-      // Start a timer that tries to reconnect every 5 seconds
-      timer = Timer.periodic(
-          const Duration(seconds: 5), (Timer t) => connectSocket());
-    });
+  void getFilePath() async {
+  Directory? directory = await getExternalStorageDirectory();
+  String newPath = '';
+  List<String> folders = directory?.path.split('/') ?? [];
+  for (int x = 1; x < folders.length; x++) {
+    String folder = folders[x];
+    if (folder != 'Android') {
+      newPath += '/' + folder;
+    } else {
+      break;
+    }
+  }
+  newPath = newPath + '/Documents/voicetypingdata';
+  directory = Directory(newPath);
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
+  if (await directory.exists()) {
+    filePath = directory.path + '/voicetypingdata.txt';
+  }
+}
+
+void appendToFile(String text) async {
+  File file = File(filePath);
+
+  // Check if the file exists, if not, create it.
+  if (!await file.exists()) {
+    file = await file.create();
   }
 
-  void _showActionSheet(BuildContext context) {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (BuildContext context) => CupertinoActionSheet(
-        title: const Text('Settings'),
-        message: const Text('Toggle Dark/Light Mode'),
-        actions: <CupertinoActionSheetAction>[
-          CupertinoActionSheetAction(
-            child: CupertinoSwitch(
-              value: Provider.of<ThemeProvider>(context).isDarkMode,
-              onChanged: (value) =>
-                  Provider.of<ThemeProvider>(context, listen: false)
-                      .toggleTheme(),
-            ),
-            onPressed: () {},
-          ),
-          CupertinoActionSheetAction(
-            child: Text(isConnected ? 'Connected' : 'Disconnected'),
-            onPressed: () {},
-          ),
-          CupertinoActionSheetAction(
-            child: CupertinoTextField(
-              controller: _ipController,
-              placeholder: 'Enter server IP',
-            ),
-            onPressed: () {},
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          isDefaultAction: true,
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          child: const Text('Cancel'),
-        ),
-      ),
-    );
-  }
-
+  await file.writeAsString(text, mode: FileMode.append);
+}
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: const Text('Voice Typing App'),
-        leading: CupertinoButton(
-          child: const Icon(CupertinoIcons.settings),
-          onPressed: () => _showActionSheet(context),
+    return Scaffold(
+      appBar: CupertinoNavigationBar(
+        middle: const Text('VoiceTyping'),
+        trailing: CupertinoSwitch(
+          value: isDarkMode,
+          onChanged: (value) {
+            setState(() {
+              isDarkMode = value;
+              (isDarkMode)
+                  ? SystemChrome.setSystemUIOverlayStyle(
+                      SystemUiOverlayStyle.dark)
+                  : SystemChrome.setSystemUIOverlayStyle(
+                      SystemUiOverlayStyle.light);
+            });
+          },
         ),
       ),
-      child: SafeArea(
-        child: Center(
-          child: CupertinoTextField(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
             controller: _controller,
-            onSubmitted: (String text) async {
-              socket?.emit('message', text);
-              _controller.clear();
-            },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              labelText: 'Type here',
+            ),
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    socket?.dispose();
-    timer?.cancel(); // Cancel the timer when the widget is disposed
-    super.dispose();
   }
 }
