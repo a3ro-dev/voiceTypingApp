@@ -33,50 +33,48 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    void _onTextChanged() {
-      // Add your logic here
-    }
-
-    @override
-    void initState() {
-      super.initState();
-      _controller.addListener(_onTextChanged);
-    }
+    _controller.addListener(_onTextChanged);
     getFilePath();
   }
 
-  void getFilePath() async {
-  Directory? directory = await getExternalStorageDirectory();
-  String newPath = '';
-  List<String> folders = directory?.path.split('/') ?? [];
-  for (int x = 1; x < folders.length; x++) {
-    String folder = folders[x];
-    if (folder != 'Android') {
-      newPath += '/' + folder;
-    } else {
-      break;
+  void _onTextChanged() {
+    List<String> words = _controller.text.split(' ');
+    if (words.length % 3 == 0) {
+      writeToFile(_controller.text);
     }
   }
-  newPath = newPath + '/Documents/voicetypingdata';
-  directory = Directory(newPath);
-  if (!await directory.exists()) {
-    await directory.create(recursive: true);
-  }
-  if (await directory.exists()) {
-    filePath = directory.path + '/voicetypingdata.txt';
-  }
-}
 
-void appendToFile(String text) async {
-  File file = File(filePath);
-
-  // Check if the file exists, if not, create it.
-  if (!await file.exists()) {
-    file = await file.create();
+  void getFilePath() async {
+    Directory? directory = await getExternalStorageDirectory();
+    String newPath = '';
+    List<String> folders = directory!.path.split('/');
+    for (int x = 1; x < folders.length; x++) {
+      String folder = folders[x];
+      if (folder != 'Android') {
+        newPath += '/' + folder;
+      } else {
+        break;
+      }
+    }
+    newPath = newPath + '/Documents/voicetypingdata';
+    directory = Directory(newPath);
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+    if (await directory.exists()) {
+      filePath = directory.path + '/voicetypingdata.txt';
+      File file = File(filePath);
+      if (!await file.exists()) {
+        await file.create();
+      }
+    }
   }
 
-  await file.writeAsString(text, mode: FileMode.append);
-}
+  void writeToFile(String text) async {
+    File file = File(filePath);
+    await file.writeAsString('$text\n');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
