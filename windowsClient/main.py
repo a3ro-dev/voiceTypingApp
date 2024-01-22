@@ -84,4 +84,4 @@ def check_device_connected(self):
 
 root = tk.Tk()
 app = App(root)
-root.mainloop()
+root.mainloop() 
