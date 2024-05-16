@@ -6,6 +6,7 @@ import pyttsx3
 import pyautogui as pyg
 from audioplayer import AudioPlayer as adp
 import pyperclip
+import threading
 
 class VoiceTypingApp:
     def __init__(self):
@@ -15,7 +16,8 @@ class VoiceTypingApp:
         self.is_listening = False
         self.root = ThemedTk(theme="clearlooks")  # Using the 'clearlooks' theme
         self.root.title("Voice Typing App")
-        self.root.geometry("300x150")
+        self.root.geometry("500x350")
+        self.root.iconbitmap('icon/voice-control.ico')
         self.create_widgets()
 
     def create_widgets(self):
@@ -28,11 +30,22 @@ class VoiceTypingApp:
         self.mic_button = ttk.Button(frame, text="🎙️", command=self.toggle_listening)
         self.mic_button.grid(row=0, column=1, padx=(10, 0))
 
-        self.close_button = ttk.Button(frame, text="X", command=self.root.quit)
+        self.close_button = ttk.Button(frame, text="❌", command=self.root.quit)
         self.close_button.grid(row=0, column=2)
 
         self.listening_label = ttk.Label(self.root, text="Listening...")
         self.listening_label.pack()
+        self.created_by_label = tk.Label(self.root, text="Developed with ❤️ by ", fg="blue")
+        self.created_by_label.pack()
+
+        self.aero_label = tk.Label(self.root, text="Aero", fg="blue", cursor="hand2")
+        self.aero_label.pack()
+        self.aero_label.bind("<Button-1>", self.open_aero_link)
+
+    def open_aero_link(self, event):
+        import webbrowser
+        webbrowser.open_new("https://github.com/a3ro-dev")
+
 
     def open_settings(self):
         # Create a new window
@@ -67,8 +80,9 @@ class VoiceTypingApp:
 
     def start_listening(self):
         self.is_listening = True
-        self.listen_loop()
-        adp('windowsClient/audio/ting.mp3').play(block=True)
+        self.listening_thread = threading.Thread(target=self.listen_loop)
+        self.listening_thread.start()
+        adp('audio/ting.mp3').play(block=True)
         self.listening_label.config(text="Listening...")
 
     def stop_listening(self):
