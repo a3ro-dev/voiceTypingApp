@@ -13,7 +13,7 @@ class VoiceTypingApp:
         self.microphone = sr.Microphone()
         self.engine = pyttsx3.init()
         self.is_listening = False
-        self.root = ThemedTk(theme="clearlooks")  # Using the 'clearlooks' theme
+        self.root = ThemedTk(theme="yaru")  # Using the yaru' theme
         self.root.title("Voice Typing App")
         self.root.geometry("300x150")
         self.create_widgets()
