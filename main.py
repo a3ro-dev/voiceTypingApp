@@ -6,6 +6,7 @@ import pyttsx3
 import pyautogui as pyg
 from audioplayer import AudioPlayer as adp
 import pyperclip
+import threading
 
 class VoiceTypingApp:
     def __init__(self):
@@ -66,16 +67,20 @@ class VoiceTypingApp:
             self.start_listening()
 
     def start_listening(self):
-        self.is_listening = True
-        self.listen_loop()
-        adp('windowsClient/audio/ting.mp3').play(block=True)
-        self.listening_label.config(text="Listening...")
+        if not self.is_listening:
+            self.is_listening = True
+            self.listening_thread = threading.Thread(target=self.listen_loop)  # Create a new thread for listening
+            self.listening_thread.start()  # Start the listening thread
+            adp('./audio/ting.mp3').play(block=True)
+            self.listening_label.config(text="Listening...")
 
     def stop_listening(self):
-        self.is_listening = False
-        self.engine.say('Listening Paused.')
-        self.engine.runAndWait()
-        self.listening_label.config(text="Not Listening...")
+        if self.is_listening:
+            self.is_listening = False
+            self.listening_thread.join()  # Wait for the listening thread to finish
+            self.engine.say('Listening Paused.')
+            self.engine.runAndWait()
+            self.listening_label.config(text="Not Listening...")
 
     def listen_loop(self):
         special_commands = {"exit", "pause", "stop", "new line", "next line"}
@@ -83,11 +88,11 @@ class VoiceTypingApp:
             try:
                 with self.microphone as source:
                     audio = self.recognizer.listen(source)
-                    text = self.recognizer.recognize(audio)
+                    text = self.recognizer.recognize(audio)  # synthesize the text from the audio
                     cmd = str(text).lower()
                     if cmd in special_commands:
                         if cmd == "exit":
-                            break
+                            self.is_listening = False  # Ensure the loop can exit
                         elif cmd in {"pause", "stop"}:
                             self.stop_listening()
                         elif cmd in {"new line", "next line"}:
@@ -99,6 +104,8 @@ class VoiceTypingApp:
             except Exception as e:
                 self.engine.say(f"I didn't understand that due to {e}")
                 self.engine.runAndWait()
+                if not self.is_listening:
+                    break  # Exit the loop if stop_listening was called
 
     def run(self):
         self.root.mainloop()

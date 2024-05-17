@@ -1,6 +1,7 @@
-tkinter==8.6
 pyttsx3==2.90
-speech_recognition==2.2.0
+SpeechRecognition==2.2.0
 pyautogui==0.9.52
 pyperclip==1.8.2
 ttkthemes==3.2.0
+
+
